@@ -49,19 +49,19 @@ hsv_img = colorblind.hsv_color_correct(img, colorblind_type='protanopia')
 | Type | Original | Daltonization | HSV Corrected |
 |----------|------------|---------------|---------------|
 | Full Color |![](images/seven.jpg) | ![](images/duteranopia_daltonized_img.jpg) | ![](images/protanopia_hsv_img.jpg) |
-| Simulated | ![](images/duteranopia_img.jpg) | ![](images/duteranopia_daltonized_view_img.jpg) | ![](images/duteranopia_hsv_view_img.jpg) |
+| Simulated Deuteranopia | ![](images/duteranopia_img.jpg) | ![](images/duteranopia_daltonized_view_img.jpg) | ![](images/duteranopia_hsv_view_img.jpg) |
 
 ### Protanopia
 | Type | Original | Daltonization | HSV Corrected |
 |----------|------------|---------------|---------------|
 | Full Color |![](images/seven.jpg) | ![](images/protanopia_daltonized_img.jpg) | ![](images/protanopia_hsv_img.jpg) |
-| Simulated | ![](images/protanopia_img.jpg) | ![](images/protanopia_daltonized_view_img.jpg) | ![](images/protanopia_hsv_view_img.jpg) |
+| Simulated Protanopia | ![](images/protanopia_img.jpg) | ![](images/protanopia_daltonized_view_img.jpg) | ![](images/protanopia_hsv_view_img.jpg) |
 
 ### Tritanopia
 | Type | Original | Daltonization | HSV Corrected |
 |----------|------------|---------------|---------------|
 | Full Color |![](images/seven.jpg) | ![](images/tritanopia_daltonized_img.jpg) | ![](images/tritanopia_hsv_img.jpg) |
-| Simulated | ![](images/tritanopia_img.jpg) | ![](images/tritanopia_daltonized_view_img.jpg) | ![](images/tritanopia_hsv_view_img.jpg) |
+| Simulated Tritanopia | ![](images/tritanopia_img.jpg) | ![](images/tritanopia_daltonized_view_img.jpg) | ![](images/tritanopia_hsv_view_img.jpg) |
 
 ## Credits
 
