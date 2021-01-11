@@ -8,70 +8,70 @@ import cv2
 
 ## LMS Daltonization
 def rgb_to_lms(img):
+    """
     lms_matrix = np.array(
         [[17.8824, 43.5161, 4.11935],
         [3.45565, 27.1554, 3.86714],
         [0.0299566, 0.184309, 1.46709]
         ]
         )
-    return np.tensordot(img, lms_matrix, axes=[[2], [1]])
+    """
+    lms_matrix = np.array(
+        [[0.3904725 , 0.54990437, 0.00890159],
+        [0.07092586, 0.96310739, 0.00135809],
+        [0.02314268, 0.12801221, 0.93605194]]
+        )
+    return np.tensordot(img, lms_matrix, axes=([2], [1]))
 
 def lms_to_rgb(img):
+    """
     rgb_matrix = np.array(
         [[0.0809444479, -0.130504409, 0.116721066],
         [0.113614708, -0.0102485335, 0.0540193266],
         [-0.000365296938, -0.00412161469, 0.693511405]
         ]
         )
-    return np.tensordot(img, rgb_matrix, axes=[[2], [1]])
+    """
+    rgb_matrix = np.array(
+        [[ 2.85831110e+00, -1.62870796e+00, -2.48186967e-02],
+        [-2.10434776e-01,  1.15841493e+00,  3.20463334e-04],
+        [-4.18895045e-02, -1.18154333e-01,  1.06888657e+00]]
+        )
+    return np.tensordot(img, rgb_matrix, axes=([2], [1]))
 
 def simulate_colorblindness(img, colorblind_type):
     lms_img = rgb_to_lms(img)
-    if colorblind_type.lower() == 'protanopia':
-        sim_matrix = np.array(
-            [[0.0, 2.02344, -2.52582],
-            [0.0, 1.0, 0.0],
-            [0.0, 0.0, 1.0]
-            ]
-            )
-    elif colorblind_type.lower() == 'duteranopia':
-        sim_matrix = np.array(
-            [[1.0, 0.0, 0.0],
-            [0.49421, 0.0, 1.24827],
-            [0.0, 0.0, 1.0]
-            ]
-            )
-    elif colorblind_type.lower() == 'tritanopia':
-        sim_matrix = np.array(
-            [[1.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0],
-            [-0.395913, 0.801109, 0.0]
-            ]
-            )
+    if colorblind_type.lower() in ['protanopia', 'p', 'pro']:
+        sim_matrix = np.array([[0, 0.90822864, 0.008192], [0, 1, 0], [0, 0, 1]], dtype=np.float16)
+    elif colorblind_type.lower() in ['duteranopia', 'd', 'dut']:
+        sim_matrix =  np.array([[1, 0, 0], [1.10104433,  0, -0.00901975], [0, 0, 1]], dtype=np.float16)
+    elif colorblind_type.lower() in ['tritanopia', 't', 'tri']:
+        sim_matrix = np.array([[1, 0, 0], [0, 1, 0], [-0.15773032,  1.19465634, 0]], dtype=np.float16)
     else:
         raise ValueError('{} is an unrecognized colorblindness type.'.format(colorblind_type))
-    lms_img = np.tensordot(lms_img, sim_matrix, axes=[[2], [1]])
+    lms_img = np.tensordot(lms_img, sim_matrix, axes=([2], [1]))
     rgb_img = lms_to_rgb(lms_img)
-    return rgb_img
+    return rgb_img.astype(np.uint8)
 
 def daltonize_correct(img, colorblind_type):
     colorblind_img = simulate_colorblindness(img, colorblind_type=colorblind_type)
     error_matrix = img - colorblind_img
-    if colorblind_type.lower() == 'protanopia':
+    """
+    if colorblind_type.lower() in ['protanopia', 'p', 'pro']:
         correction_matrix = np.array(
             [[0.0, 0.0, 0.0],
             [0.7, 1.0, 0.0],
             [0.7, 0.0, 1.0]
             ]
             )
-    elif colorblind_type.lower() == 'duteranopia':
+    elif colorblind_type.lower() in ['duteranopia', 'd', 'dut']:
         correction_matrix = np.array(
             [[1.0, 0.7, 0.0],
             [0.0, 0.0, 0.0],
             [0.0, 0.7, 1.0]
             ]
             )
-    elif colorblind_type.lower() == 'tritanopia':
+    elif colorblind_type.lower() in ['tritanopia', 't', 'tri']:
         correction_matrix = np.array(
             [[1.0, 0.0, 0.7],
             [0.0, 1.0, 0.7],
@@ -80,7 +80,13 @@ def daltonize_correct(img, colorblind_type):
             )
     else:
         raise ValueError('{} is an unrecognized colorblindness type.'.format(colorblind_type))
-    corrected_error_matrix = np.tensordot(error_matrix, correction_matrix, axes=[[2], [1]])
+    """
+    correction_matrix = np.array(
+            [[0.0, 0.0, 0.0],
+            [0.7, 1.0, 0.0],
+            [0.7, 0.0, 1.0]]
+            )
+    corrected_error_matrix = np.tensordot(error_matrix, correction_matrix, axes=([2], [1]))
     return img + corrected_error_matrix
 
 ## color-blind filter service (CBFS) algorithm
@@ -89,14 +95,13 @@ def daltonize_correct(img, colorblind_type):
 ## LAB color correction
 def lab_correct(img, l_shift=15, a_shift=15, b_shift=15):
     lab_img = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
-    for i, shift in enumerate(l_shift, a_shift, b_shift):
+    for i, shift in enumerate([l_shift, a_shift, b_shift]):
         lab_img[..., i] = np.where(
             lab_img[..., i] > 127,
             lab_img[..., i] + shift,
             lab_img[..., i] - shift
             )
-    lab_img = np.clip(lab_img, a_min=0.0, a_max=255)
-    rgb_img = cv2.cvtColor(img, cv2.COLOR_LAB2RGB)
+    rgb_img = cv2.cvtColor(lab_img, cv2.COLOR_LAB2RGB)
     return rgb_img
 
 ## HSV Color Shifting Algorithm
@@ -149,9 +154,12 @@ def hsv_to_rgb(hsv):
     rgb[..., 2] = np.select(conditions, [v, p, t, v, v, q], default=p)
     return rgb.astype('uint8')
 
-def color_shift_correct(img, h=0.3):
+def color_shift_correct(img):
+    rgb_img = img/255
     hsv_img = rgb_to_hsv(img)
-    hsv_img[..., 0] = hsv_img[..., 0] + h
+    green_ratio = (hsv_img[..., 0] - (60/360))/rgb_img[..., 1]
+    blue_range = green_ratio*rgb_img[..., 2]
+    hsv_img[..., 0] = 0.5 + blue_range
     hsv_img[..., 0] = np.where(
         hsv_img[..., 0] > 1.0,
         hsv_img[..., 0] - 1.0,
