@@ -43,7 +43,7 @@ def simulate_colorblindness(img, colorblind_type):
     lms_img = rgb_to_lms(img)
     if colorblind_type.lower() in ['protanopia', 'p', 'pro']:
         sim_matrix = np.array([[0, 0.90822864, 0.008192], [0, 1, 0], [0, 0, 1]], dtype=np.float16)
-    elif colorblind_type.lower() in ['duteranopia', 'd', 'dut']:
+    elif colorblind_type.lower() in ['deuteranopia', 'd', 'deut']:
         sim_matrix =  np.array([[1, 0, 0], [1.10104433,  0, -0.00901975], [0, 0, 1]], dtype=np.float16)
     elif colorblind_type.lower() in ['tritanopia', 't', 'tri']:
         sim_matrix = np.array([[1, 0, 0], [0, 1, 0], [-0.15773032,  1.19465634, 0]], dtype=np.float16)
@@ -56,31 +56,6 @@ def simulate_colorblindness(img, colorblind_type):
 def daltonize_correct(img, colorblind_type):
     colorblind_img = simulate_colorblindness(img, colorblind_type=colorblind_type)
     error_matrix = img - colorblind_img
-    """
-    if colorblind_type.lower() in ['protanopia', 'p', 'pro']:
-        correction_matrix = np.array(
-            [[0.0, 0.0, 0.0],
-            [0.7, 1.0, 0.0],
-            [0.7, 0.0, 1.0]
-            ]
-            )
-    elif colorblind_type.lower() in ['duteranopia', 'd', 'dut']:
-        correction_matrix = np.array(
-            [[1.0, 0.7, 0.0],
-            [0.0, 0.0, 0.0],
-            [0.0, 0.7, 1.0]
-            ]
-            )
-    elif colorblind_type.lower() in ['tritanopia', 't', 'tri']:
-        correction_matrix = np.array(
-            [[1.0, 0.0, 0.7],
-            [0.0, 1.0, 0.7],
-            [0.0, 0.0, 0.0]
-            ]
-            )
-    else:
-        raise ValueError('{} is an unrecognized colorblindness type.'.format(colorblind_type))
-    """
     correction_matrix = np.array(
             [[0.0, 0.0, 0.0],
             [0.7, 1.0, 0.0],
@@ -90,7 +65,32 @@ def daltonize_correct(img, colorblind_type):
     return img + corrected_error_matrix
 
 ## color-blind filter service (CBFS) algorithm
-
+# I couldn't find any implementations
+# so this is my best guess
+# see https://www.researchgate.net/publication/221023903_Efficient_edge-services_for_colorblind_users
+def cbfs_correct(img, closeness=70):
+    red_values = 0
+    green_values = 0
+    for y, x in zip(np.arange(img.shape[0]), np.arange(img.shape[1])):
+        if (img[y, x, 0] > img[y, x, 1] + 45) and (img[y, x, 0] > img[y, x, 2] + 45):
+            red_values += 1
+        elif (img[y, x, 1] > img[y, x, 0] + 45) and (img[y, x, 1] > img[y, x, 2] + 45):
+            green_values += 1
+    if red_values > green_values:
+        proximity_matrix = np.abs(img[..., 0] - np.array([[[255, ]]]))
+    else:
+        proximity_matrix = np.abs(img[..., 1] - np.array([[[255, ]]]))
+    proximity_matrix = np.reshape(proximity_matrix, newshape=(img.shape[0], img.shape[1], 1))
+    print(proximity_matrix.shape)
+    hsl_img = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
+    hsl_img = np.where(
+        proximity_matrix < closeness,
+        hsl_img+np.array([[[-76.5, 63.75, -25.5]]]),
+        hsl_img+np.array([[[0.0, -25.5, 25.5]]])
+        )
+    hsl_img = np.clip(hsl_img, a_min=0, a_max=255)
+    hsl_img = cv2.cvtColor(hsl_img.astype(np.uint8), cv2.COLOR_HLS2RGB)
+    return hsl_img
 
 ## LAB color correction
 def lab_correct(img, l_shift=15, a_shift=15, b_shift=15):
@@ -101,6 +101,7 @@ def lab_correct(img, l_shift=15, a_shift=15, b_shift=15):
             lab_img[..., i] + shift,
             lab_img[..., i] - shift
             )
+    lab_img = np.clip(lab_img, a_min=0, a_max=255)
     rgb_img = cv2.cvtColor(lab_img, cv2.COLOR_LAB2RGB)
     return rgb_img
 
@@ -154,15 +155,25 @@ def hsv_to_rgb(hsv):
     rgb[..., 2] = np.select(conditions, [v, p, t, v, v, q], default=p)
     return rgb.astype('uint8')
 
-def color_shift_correct(img):
+def hsv_color_correct(img, colorblind_type='deuteranopia'):
     rgb_img = img/255
     hsv_img = rgb_to_hsv(img)
-    green_ratio = (hsv_img[..., 0] - (60/360))/rgb_img[..., 1]
-    blue_range = green_ratio*rgb_img[..., 2]
-    hsv_img[..., 0] = 0.5 + blue_range
+    if colorblind_type in ['deuteranopia ', 'protanopia', 'deut', 'pro', 'd', 'p']:
+        green_ratio = (hsv_img[..., 0] - (60/360))/rgb_img[..., 1]
+        blue_range = green_ratio*rgb_img[..., 2]
+        hsv_img[..., 0] = 0.5 + blue_range
+    elif colorblind_type in ['tritanopia', 't', 'tri']:
+        blue_ratio = (hsv_img[..., 0] - (60/360))/rgb_img[..., 2]
+        green_range = blue_ratio*rgb_img[..., 1]
+        hsv_img[..., 0] = (120/360) + green_range
     hsv_img[..., 0] = np.where(
         hsv_img[..., 0] > 1.0,
         hsv_img[..., 0] - 1.0,
+        hsv_img[..., 0]
+        )
+    hsv_img[..., 0] = np.where(
+        hsv_img[..., 0] < 0.0,
+        hsv_img[..., 0] + 1.0,
         hsv_img[..., 0]
         )
     hsv_img[..., 2] = hsv_img[..., 2] * 255

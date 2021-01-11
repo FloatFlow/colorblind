@@ -4,9 +4,9 @@ Colorblind is a computer vision library that converts images into a
 colorblind friendly version depending on the type of colorblindness.
 The three supported types of colorblindness/color weakness are:
 
-* Deuteranopia: green weakness
-* Protanopia: red weakness
-* Tritanopia: blue weakness (extremely rare)
+* Deuteranopia: red-green weakness, particularly green
+* Protanopia: red-green weakness, particularly red
+* Tritanopia: blue weakness
 
 So far we provide three algorithms to correct the images:
 

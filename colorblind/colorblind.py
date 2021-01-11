@@ -65,7 +65,32 @@ def daltonize_correct(img, colorblind_type):
     return img + corrected_error_matrix
 
 ## color-blind filter service (CBFS) algorithm
-
+# I couldn't find any implementations
+# so this is my best guess
+# see https://www.researchgate.net/publication/221023903_Efficient_edge-services_for_colorblind_users
+def cbfs_correct(img, closeness=70):
+    red_values = 0
+    green_values = 0
+    for y, x in zip(np.arange(img.shape[0]), np.arange(img.shape[1])):
+        if (img[y, x, 0] > img[y, x, 1] + 45) and (img[y, x, 0] > img[y, x, 2] + 45):
+            red_values += 1
+        elif (img[y, x, 1] > img[y, x, 0] + 45) and (img[y, x, 1] > img[y, x, 2] + 45):
+            green_values += 1
+    if red_values > green_values:
+        proximity_matrix = np.abs(img[..., 0] - np.array([[[255, ]]]))
+    else:
+        proximity_matrix = np.abs(img[..., 1] - np.array([[[255, ]]]))
+    proximity_matrix = np.reshape(proximity_matrix, newshape=(img.shape[0], img.shape[1], 1))
+    print(proximity_matrix.shape)
+    hsl_img = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
+    hsl_img = np.where(
+        proximity_matrix < closeness,
+        hsl_img+np.array([[[-76.5, 63.75, -25.5]]]),
+        hsl_img+np.array([[[0.0, -25.5, 25.5]]])
+        )
+    hsl_img = np.clip(hsl_img, a_min=0, a_max=255)
+    hsl_img = cv2.cvtColor(hsl_img.astype(np.uint8), cv2.COLOR_HLS2RGB)
+    return hsl_img
 
 ## LAB color correction
 def lab_correct(img, l_shift=15, a_shift=15, b_shift=15):
@@ -76,6 +101,7 @@ def lab_correct(img, l_shift=15, a_shift=15, b_shift=15):
             lab_img[..., i] + shift,
             lab_img[..., i] - shift
             )
+    lab_img = np.clip(lab_img, a_min=0, a_max=255)
     rgb_img = cv2.cvtColor(lab_img, cv2.COLOR_LAB2RGB)
     return rgb_img
 
