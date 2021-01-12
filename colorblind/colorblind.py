@@ -93,16 +93,27 @@ def cbfs_correct(img, closeness=70):
     return hsl_img
 
 ## LAB color correction
-def lab_correct(img, l_shift=15, a_shift=15, b_shift=15):
+def lab_correct(img, shift=15, ratio=0.3, colorblind_type='deuteranopia'):
     lab_img = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
-    for i, shift in enumerate([l_shift, a_shift, b_shift]):
+    for i in range(1, 3):
         lab_img[..., i] = np.where(
             lab_img[..., i] > 127,
             lab_img[..., i] + shift,
             lab_img[..., i] - shift
             )
+    if colorblind_type in ['deuteranopia ', 'protanopia', 'deut', 'pro', 'd', 'p']:
+        l_matrix = np.abs(lab_img[..., 1]-127)*ratio
+    elif colorblind_type in ['tritanopia', 't', 'tri']:
+        l_matrix = np.abs(lab_img[..., 2]-127)*ratio
+    else:
+        raise ValueError('{} is an unrecognized colorblindness type.'.format(colorblind_type))
+    lab_img[..., 0] = np.where(
+        lab_img[..., 0] > 127,
+        lab_img[..., 0] + l_matrix,
+        lab_img[..., 0] - l_matrix
+        )
     lab_img = np.clip(lab_img, a_min=0, a_max=255)
-    rgb_img = cv2.cvtColor(lab_img, cv2.COLOR_LAB2RGB)
+    rgb_img = cv2.cvtColor(lab_img.astype(np.uint8), cv2.COLOR_LAB2RGB)
     return rgb_img
 
 ## HSV Color Shifting Algorithm
@@ -166,6 +177,8 @@ def hsv_color_correct(img, colorblind_type='deuteranopia'):
         blue_ratio = (hsv_img[..., 0] - (60/360))/rgb_img[..., 2]
         green_range = blue_ratio*rgb_img[..., 1]
         hsv_img[..., 0] = (120/360) + green_range
+    else:
+        raise ValueError('{} is an unrecognized colorblindness type.'.format(colorblind_type))
     hsv_img[..., 0] = np.where(
         hsv_img[..., 0] > 1.0,
         hsv_img[..., 0] - 1.0,

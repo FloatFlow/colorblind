@@ -12,8 +12,8 @@ So far we provide three algorithms to correct the images:
 
 * Daltonization: Original method for generating colorblind-friendly images
 * HSV Hue Shift: Shifts Hue based on green ratio or blue ratio (depending on colorblindness type)
+* Color-Blind Filter Service (CBFS): A little hit or miss based on my implementation
 * LAB Shift: Previous studies for this had to tune hyperparameters to get good results
-
 
 ## Installation
 
@@ -41,32 +41,42 @@ daltonized_img = colorblind.daltonize_correct(img, colorblind_type='protanopia')
 
 # correct using hsv correction
 hsv_img = colorblind.hsv_color_correct(img, colorblind_type='protanopia')
+
+# correct using CBFS
+cbfs_img = colorblind.cbfs_correct(img, closeness=70)
+
+# correct using LAB color correction
+lab_img = colorblind.lab_correct(img, l_shift=70, a_shift=70, b_shift=70)
 ```
 
 ## Results
 
 ### Deuteranopia
-| Type | Original | Daltonization | HSV Corrected |
-|----------|------------|---------------|---------------|
-| Full Color |![](images/seven.jpg) | ![](images/duteranopia_daltonized_img.jpg) | ![](images/protanopia_hsv_img.jpg) |
-| Simulated Deuteranopia | ![](images/duteranopia_img.jpg) | ![](images/duteranopia_daltonized_view_img.jpg) | ![](images/duteranopia_hsv_view_img.jpg) |
+| Type | Original | Daltonization | HSV Corrected | LAB Corrected | CBFS (HSL) Corrected |
+|----------|------------|---------------|---------------|---------|------------|
+| Full Color |![](images/seven.jpg) | ![](images/duteranopia_daltonized_img.jpg) | ![](images/protanopia_hsv_img.jpg) | ![](images/protanopia_lab_img.jpg) | ![](images/protanopia_hsl_img.jpg) |
+| Simulated Deuteranopia | ![](images/duteranopia_img.jpg) | ![](images/duteranopia_daltonized_view_img.jpg) | ![](images/duteranopia_hsv_view_img.jpg) | ![](images/deuteranopia_lab_view_img.jpg) | ![](images/duteranopia_hsl_view_img.jpg) |
 
 ### Protanopia
-| Type | Original | Daltonization | HSV Corrected |
+| Type | Original | Daltonization | HSV Corrected | LAB Corrected | CBFS (HSL) Corrected |
 |----------|------------|---------------|---------------|
-| Full Color |![](images/seven.jpg) | ![](images/protanopia_daltonized_img.jpg) | ![](images/protanopia_hsv_img.jpg) |
-| Simulated Protanopia | ![](images/protanopia_img.jpg) | ![](images/protanopia_daltonized_view_img.jpg) | ![](images/protanopia_hsv_view_img.jpg) |
+| Full Color |![](images/seven.jpg) | ![](images/protanopia_daltonized_img.jpg) | ![](images/protanopia_hsv_img.jpg) | ![](images/protanopia_lab_img.jpg) | ![](images/protanopia_hsl_img.jpg) |
+| Simulated Protanopia | ![](images/protanopia_img.jpg) | ![](images/protanopia_daltonized_view_img.jpg) | ![](images/protanopia_hsv_view_img.jpg) | ![](images/protanopia_lab_view_img.jpg) | ![](images/protanopia_hsl_view_img.jpg) |
 
 ### Tritanopia
-| Type | Original | Daltonization | HSV Corrected |
-|----------|------------|---------------|---------------|
-| Full Color |![](images/seven.jpg) | ![](images/tritanopia_daltonized_img.jpg) | ![](images/tritanopia_hsv_img.jpg) |
-| Simulated Tritanopia | ![](images/tritanopia_img.jpg) | ![](images/tritanopia_daltonized_view_img.jpg) | ![](images/tritanopia_hsv_view_img.jpg) |
+| Type | Original | Daltonization | HSV Corrected | LAB Corrected | 
+|----------|------------|---------------|---------------|---------|
+| Full Color |![](images/seven.jpg) | ![](images/tritanopia_daltonized_img.jpg) | ![](images/tritanopia_hsv_img.jpg) | ![](images/tritanopia_lab_img.jpg) |
+| Simulated Tritanopia | ![](images/tritanopia_img.jpg) | ![](images/tritanopia_daltonized_view_img.jpg) | ![](images/tritanopia_hsv_view_img.jpg) | ![](images/tritanopia_lab_view_img.jpg) |
 
 ## Credits
 
 Mostly inspired by a summary paper of algorithms applicable to making images color-blind friendly.
 Example: https://www.researchgate.net/publication/326626897_Smartphone_Based_Image_Color_Correction_for_Color_Blindness
+
+* Color-Blind Filter Service: https://www.researchgate.net/publication/221023903_Efficient_edge-services_for_colorblind_users
+* Daltonization: https://ieeexplore.ieee.org/document/5553346
+* 
 
 Daltonization values came from https://github.com/joergdietrich/daltonize
 
