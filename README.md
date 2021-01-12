@@ -59,7 +59,7 @@ lab_img = colorblind.lab_correct(img, l_shift=70, a_shift=70, b_shift=70)
 
 ### Protanopia
 | Type | Original | Daltonization | HSV Corrected | LAB Corrected | CBFS (HSL) Corrected |
-|----------|------------|---------------|---------------|
+|----------|------------|---------------|---------------|---------|------------|
 | Full Color |![](images/seven.jpg) | ![](images/protanopia_daltonized_img.jpg) | ![](images/protanopia_hsv_img.jpg) | ![](images/protanopia_lab_img.jpg) | ![](images/protanopia_hsl_img.jpg) |
 | Simulated Protanopia | ![](images/protanopia_img.jpg) | ![](images/protanopia_daltonized_view_img.jpg) | ![](images/protanopia_hsv_view_img.jpg) | ![](images/protanopia_lab_view_img.jpg) | ![](images/protanopia_hsl_view_img.jpg) |
 
