@@ -46,7 +46,7 @@ hsv_img = colorblind.hsv_color_correct(img, colorblind_type='protanopia')
 cbfs_img = colorblind.cbfs_correct(img, closeness=70)
 
 # correct using LAB color correction
-lab_img = colorblind.lab_correct(img, l_shift=70, a_shift=70, b_shift=70)
+lab_img = colorblind.lab_correct(img, shift=30, ratio=0.1, colorblind_type='protanopia')
 ```
 
 ## Results
@@ -76,7 +76,8 @@ Example: https://www.researchgate.net/publication/326626897_Smartphone_Based_Ima
 
 * Color-Blind Filter Service: https://www.researchgate.net/publication/221023903_Efficient_edge-services_for_colorblind_users
 * Daltonization: https://ieeexplore.ieee.org/document/5553346
-* 
+* HSV Color Shift: https://www.researchgate.net/publication/284698928_Shifting_Colors_to_Overcome_not_Realizing_Objects_Problem_due_to_Color_Vision_Deficiency
+* LAB Shift: Original source no longer available
 
 Daltonization values came from https://github.com/joergdietrich/daltonize
 
